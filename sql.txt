@@ -1,0 +1,85 @@
+-- ============================================
+-- SỬ DỤNG DATABASE QUẢN LÝ BÁN HÀNG
+-- ============================================
+USE QuanLyBanHang;
+
+-- Xóa dữ liệu cũ (nếu có) để chạy lại sạch
+DELETE FROM OrderDetail;
+DELETE FROM `Order`;
+DELETE FROM Product;
+DELETE FROM Customer;
+
+-- ============================================
+-- BƯỚC 1: THÊM DỮ LIỆU VÀO BẢNG CUSTOMER
+-- ============================================
+INSERT INTO Customer (cID, cName, cAge) VALUES
+    (1, 'Minh Quan', 10),
+    (2, 'Ngoc Oanh', 20),
+    (3, 'Hong Ha', 50);
+
+-- ============================================
+-- BƯỚC 2: THÊM DỮ LIỆU VÀO BẢNG PRODUCT
+-- ============================================
+INSERT INTO Product (pID, pName, pPrice) VALUES
+    (1, 'May Giat', 3),
+    (2, 'Tu Lanh', 5),
+    (3, 'Dieu Hoa', 7),
+    (4, 'Quat', 1),
+    (5, 'Bep Dien', 2);
+
+-- ============================================
+-- BƯỚC 3: THÊM DỮ LIỆU VÀO BẢNG ORDER
+-- ============================================
+INSERT INTO `Order` (oID, cID, oDate, oTotalPrice) VALUES
+    (1, 1, '2006-03-21', NULL),
+    (2, 2, '2006-03-23', NULL),
+    (3, 1, '2006-03-16', NULL);
+
+-- ============================================
+-- BƯỚC 4: THÊM DỮ LIỆU VÀO BẢNG ORDERDETAIL
+-- ============================================
+INSERT INTO OrderDetail (oID, pID, odQTY) VALUES
+    (1, 1, 3),
+    (1, 3, 7),
+    (1, 4, 2),
+    (2, 1, 1),
+    (3, 1, 8),
+    (2, 5, 4),
+    (2, 3, 3);
+
+-- ============================================
+-- BƯỚC 5: TRUY VẤN
+-- ============================================
+
+-- 5.1. Hiển thị oID, oDate, oTotalPrice của tất cả hóa đơn
+SELECT oID, oDate, oTotalPrice 
+FROM `Order`;
+
+-- 5.2. Danh sách khách hàng đã mua hàng + sản phẩm được mua
+SELECT 
+    c.cID,
+    c.cName AS CustomerName,
+    p.pName AS ProductName,
+    od.odQTY AS Quantity
+FROM Customer c
+JOIN `Order` o ON c.cID = o.cID
+JOIN OrderDetail od ON o.oID = od.oID
+JOIN Product p ON od.pID = p.pID
+ORDER BY c.cID, o.oID;
+
+-- 5.3. Khách hàng KHÔNG mua bất kỳ sản phẩm nào (Anti-Join)
+SELECT c.cID, c.cName
+FROM Customer c
+LEFT JOIN `Order` o ON c.cID = o.cID
+WHERE o.oID IS NULL;
+
+-- 5.4. Mã hóa đơn, ngày bán, giá tiền từng hóa đơn
+SELECT 
+    o.oID AS OrderID,
+    o.oDate AS OrderDate,
+    SUM(od.odQTY * p.pPrice) AS TotalPrice
+FROM `Order` o
+JOIN OrderDetail od ON o.oID = od.oID
+JOIN Product p ON od.pID = p.pID
+GROUP BY o.oID, o.oDate
+ORDER BY o.oID;
